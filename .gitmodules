@@ -1,0 +1,6 @@
+[submodule "RareSkills/RareSkills-Solidity-Bootcamp/Week1/contracts/lib/forge-std"]
+	path = RareSkills/RareSkills-Solidity-Bootcamp/Week1/contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "RareSkills/RareSkills-Solidity-Bootcamp/Week1/contracts/lib/openzeppelin-contracts"]
+	path = RareSkills/RareSkills-Solidity-Bootcamp/Week1/contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
