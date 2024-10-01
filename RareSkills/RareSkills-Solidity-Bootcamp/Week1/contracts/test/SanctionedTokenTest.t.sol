@@ -18,7 +18,7 @@ contract SanctionedTokenTest is Test {
     function setUp() external {
         DeploySanctionedToken deployer = new DeploySanctionedToken();
         sanctionedToken = deployer.run();
-        
+
         vm.startPrank(msg.sender);
         // Distribute tokens to Alice
         uint256 faucetAmount = 10000e18;
@@ -59,9 +59,7 @@ contract SanctionedTokenTest is Test {
         assert(!sanctionedToken.blacklist(alice));
 
         vm.prank(blacklistedSpender);
-        vm.expectRevert(
-            abi.encodeWithSelector(SanctionedToken.AccountIsBlacklisted.selector, blacklistedSpender)
-        );
+        vm.expectRevert(abi.encodeWithSelector(SanctionedToken.AccountIsBlacklisted.selector, blacklistedSpender));
         sanctionedToken.transfer(alice, 100);
     }
 
@@ -73,9 +71,7 @@ contract SanctionedTokenTest is Test {
         assert(!sanctionedToken.blacklist(alice));
 
         vm.prank(alice);
-        vm.expectRevert(
-            abi.encodeWithSelector(SanctionedToken.AccountIsBlacklisted.selector, blacklistedRecipient)
-        );
+        vm.expectRevert(abi.encodeWithSelector(SanctionedToken.AccountIsBlacklisted.selector, blacklistedRecipient));
         sanctionedToken.transfer(blacklistedRecipient, 100);
     }
 }
