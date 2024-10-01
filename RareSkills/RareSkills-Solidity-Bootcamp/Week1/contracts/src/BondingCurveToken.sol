@@ -66,7 +66,7 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
      * @dev Withdraw the reserve token from the contract
      * @param recipient The address to receive the reserve token
      */
-    function _withdrawReserves(address recipient) public onlyOwner {
+    function _withdrawReserves(address recipient) external onlyOwner {
         uint256 reserveToWithdraw = reserves;
         reserves = 0;
         IERC20(reserveToken).safeTransfer(recipient, reserveToWithdraw);
@@ -85,7 +85,7 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
      * @param maxCostAmount The maximum cost amount of reserve token
      * @return totalCost The total cost of reserve token
      */
-    function buy(address recipient, uint256 amount, uint256 maxCostAmount) public returns (uint256) {
+    function buy(address recipient, uint256 amount, uint256 maxCostAmount) external returns (uint256) {
         if (amount == 0) revert BuyingAmountIsZero();
 
         (uint256 totalCost, uint256 nextPrice) = _calculateBuyCost(amount);
@@ -94,9 +94,10 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
             revert InsufficientReserveAmount();
         }
 
-        IERC20(reserveToken).safeTransferFrom(msg.sender, address(this), totalCost);
         tokenPrice = nextPrice;
         _mint(recipient, amount);
+
+        IERC20(reserveToken).safeTransferFrom(msg.sender, address(this), totalCost);
 
         emit Buy(msg.sender, recipient, amount, totalCost);
 
@@ -111,14 +112,12 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
      * @param minReceivedAmount The minimum amount of reserve token to receive
      * @return totalReceived The total received reserve token
      */
-    function sell(address recipient, uint256 amount, uint256 minReceivedAmount) public returns (uint256) {
+    function sell(address recipient, uint256 amount, uint256 minReceivedAmount) external returns (uint256) {
         if (recipient == address(0)) revert RecipientIsZeroAddress();
         if (amount == 0) revert SellingAmountIsZero();
 
         (uint256 totalReceived, uint256 nextPrice) = _calculateSellReceived(amount);
-        if (totalReceived < minReceivedAmount) {
-            revert SellingSlippageExceeded();
-        }
+        
 
         if (amount > balanceOf(msg.sender)) {
             revert InsufficientTokenAmount();
@@ -130,6 +129,9 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
         uint256 fee = totalReceived * FEE / FEE_PRECISION;
         reserves = reserves + fee;
         totalReceived = totalReceived - fee;
+        if (totalReceived < minReceivedAmount) {
+            revert SellingSlippageExceeded();
+        }
         IERC20(reserveToken).safeTransfer(recipient, totalReceived);
 
         emit Sell(msg.sender, recipient, amount, totalReceived);

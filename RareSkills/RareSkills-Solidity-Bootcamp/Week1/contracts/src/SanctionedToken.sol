@@ -36,7 +36,7 @@ contract SanctionedToken is Ownable2Step, ERC20 {
      * @dev Add an account to the blacklist
      * @param account The account to be added to the blacklist
      */
-    function _addToBlacklist(address account) public onlyOwner {
+    function _addToBlacklist(address account) external onlyOwner {
         if (blacklist[account]) {
             revert AccountIsAlreadyBlacklisted();
         }
@@ -50,7 +50,7 @@ contract SanctionedToken is Ownable2Step, ERC20 {
      * @dev Remove an account from the blacklist
      * @param account The account to be removed from the blacklist
      */
-    function _removeFromBlacklist(address account) public onlyOwner {
+    function _removeFromBlacklist(address account) external onlyOwner {
         if (!blacklist[account]) {
             revert AccountIsNotBlacklisted();
         }

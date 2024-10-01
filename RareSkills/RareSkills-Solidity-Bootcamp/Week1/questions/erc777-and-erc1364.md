@@ -1,4 +1,5 @@
 - **1.1 what problems ERC777 and ERC1363 solves?**
+  - Preventing tokens from getting trapped in contracts.
   - Allow contracts to receive tokens in a single transaction, rather than two different transactions that calling `approve()` and then calling `transferFrom()` for ERC20 tokens.
 
 - **1.2 what issues are there with ERC777?**

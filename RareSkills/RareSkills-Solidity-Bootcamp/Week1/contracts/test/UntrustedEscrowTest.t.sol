@@ -33,14 +33,14 @@ contract UntrustedEscrowTest is Test {
         token1.forceApprove(address(untrustedEscrow), type(uint256).max);
         // Deposit the token to the untrusted escrow
         uint256 depositAmount = 100e18;
-        uint256 beforeEscrowCounts = untrustedEscrow.escrowId();
+        uint256 beforeEscrowCounts = untrustedEscrow.escrowCounts();
         untrustedEscrow.deposit(alice, address(token1), depositAmount);
-        uint256 afterEscrowCounts = untrustedEscrow.escrowId();
+        uint256 afterEscrowCounts = untrustedEscrow.escrowCounts();
         // Should make a new escrow
         assertEq(beforeEscrowCounts + 1, afterEscrowCounts);
         vm.stopPrank();
 
-        (address buyer, address seller, address token, uint256 amount, uint256 releaseTime, bool cliamed) =
+        (address buyer, address seller, address token, uint256 amount, uint256 releaseTime, bool claimed) =
             untrustedEscrow.escrows(beforeEscrowCounts);
 
         assertEq(buyer, msg.sender);
@@ -48,18 +48,18 @@ contract UntrustedEscrowTest is Test {
         assertEq(token, address(token1));
         assertEq(amount, depositAmount);
         assertEq(releaseTime, block.timestamp + 3 days);
-        assert(!cliamed);
+        assert(!claimed);
     }
 
     function testWithdraw() external {
         vm.startPrank(msg.sender);
         token1.forceApprove(address(untrustedEscrow), type(uint256).max);
         uint256 depositAmount = 100e18;
-        uint256 beforeEscrowCounts = untrustedEscrow.escrowId();
+        uint256 beforeEscrowCounts = untrustedEscrow.escrowCounts();
         untrustedEscrow.deposit(alice, address(token1), depositAmount);
         vm.stopPrank();
 
-        (, address seller,,, uint256 releaseTime, bool cliamed) =
+        (, address seller,,, uint256 releaseTime, bool claimed) =
             untrustedEscrow.escrows(beforeEscrowCounts);
 
         // Increase the time to the release time
@@ -69,7 +69,7 @@ contract UntrustedEscrowTest is Test {
         untrustedEscrow.withdraw(beforeEscrowCounts);
         vm.stopPrank();
 
-        (,,,,, cliamed) = untrustedEscrow.escrows(beforeEscrowCounts);
-        assert(cliamed);
+        (,,,,, claimed) = untrustedEscrow.escrows(beforeEscrowCounts);
+        assert(claimed);
     }
 }

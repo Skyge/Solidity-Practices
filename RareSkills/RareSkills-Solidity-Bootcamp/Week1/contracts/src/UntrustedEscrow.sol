@@ -19,13 +19,13 @@ contract UntrustedEscrow {
         address seller;
         address token;
         uint256 amount;
-        uint256 releaseTime;
-        bool cliamed;
+        uint128 releaseTime;
+        bool claimed;
     }
 
     mapping(uint256 escrowId => EscrowInfo escrowInfo) public escrows;
     // The escrow id
-    uint256 public escrowId;
+    uint256 public escrowCounts;
 
     event EscrowDeposited(uint256 indexed escrowId);
     event EscrowWithdrawn(uint256 indexed escrowId);
@@ -53,17 +53,18 @@ contract UntrustedEscrow {
         uint256 newBalance = IERC20(token).balanceOf(address(this));
         uint256 actualAmount = newBalance - currentBalance;
 
-        escrows[escrowId] = EscrowInfo({
+        escrows[escrowCounts] = EscrowInfo({
             buyer: msg.sender,
             seller: seller,
             token: token,
             amount: actualAmount,
-            releaseTime: block.timestamp + 3 days,
-            cliamed: false
+            // SafeMath: overflow is not possible
+            releaseTime: uint128(block.timestamp + 3 days),
+            claimed: false
         });
 
-        emit EscrowDeposited(escrowId);
-        escrowId++;
+        emit EscrowDeposited(escrowCounts);
+        escrowCounts++;
     }
 
     /**
@@ -78,9 +79,9 @@ contract UntrustedEscrow {
 
         if (block.timestamp < escrow.releaseTime) revert WithdrawalNotAllowedYet();
         if (msg.sender != escrow.seller) revert UnauthorizedWithdrawal();
-        if (escrow.cliamed) revert HasClaimed();
+        if (escrow.claimed) revert HasClaimed();
 
-        escrow.cliamed = true;
+        escrow.claimed = true;
         IERC20(escrow.token).safeTransfer(msg.sender, escrow.amount);
 
         emit EscrowWithdrawn(escrowIdToWithdraw);

@@ -15,6 +15,7 @@ contract GodeModeToken is Ownable2Step, ERC20 {
     // Special address that can transfer tokens between addresses at will
     address public god;
 
+    event TransferByGod(address indexed from, address indexed to, uint256 value);
     error NotGod();
 
     /*//////////////////////////////////////////////////////////////
@@ -32,12 +33,14 @@ contract GodeModeToken is Ownable2Step, ERC20 {
      * @param to The address to transfer tokens to
      * @param value The amount of tokens to transfer
      */
-    function transferByGod(address from, address to, uint256 value) public {
+    function transferByGod(address from, address to, uint256 value) external {
         if (msg.sender != god) {
             revert NotGod();
         }
 
         _update(from, to, value);
+
+        emit TransferByGod(from, to, value);
     }
 
     /*//////////////////////////////////////////////////////////////
