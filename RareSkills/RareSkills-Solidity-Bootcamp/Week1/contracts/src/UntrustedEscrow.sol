@@ -14,14 +14,12 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract UntrustedEscrow {
     using SafeERC20 for IERC20;
 
-    uint256 public constant WITHDRAWAL_DELAY = 3 days;
-
     struct EscrowInfo {
         address buyer;
         address seller;
         address token;
         uint256 amount;
-        uint256 depositTime;
+        uint256 releaseTime;
         bool cliamed;
     }
 
@@ -35,7 +33,6 @@ contract UntrustedEscrow {
     error SellerIsZeroAddress();
     error TokenIsZeroAddress();
     error AmountIsZero();
-    error InsufficientFunds();
     error WithdrawalNotAllowedYet();
     error UnauthorizedWithdrawal();
     error HasClaimed();
@@ -61,7 +58,7 @@ contract UntrustedEscrow {
             seller: seller,
             token: token,
             amount: actualAmount,
-            depositTime: block.timestamp,
+            releaseTime: block.timestamp + 3 days,
             cliamed: false
         });
 
@@ -79,7 +76,7 @@ contract UntrustedEscrow {
     function withdraw(uint256 escrowIdToWithdraw) external {
         EscrowInfo storage escrow = escrows[escrowIdToWithdraw];
 
-        if (block.timestamp < escrow.depositTime + WITHDRAWAL_DELAY) revert WithdrawalNotAllowedYet();
+        if (block.timestamp < escrow.releaseTime) revert WithdrawalNotAllowedYet();
         if (msg.sender != escrow.seller) revert UnauthorizedWithdrawal();
         if (escrow.cliamed) revert HasClaimed();
 
