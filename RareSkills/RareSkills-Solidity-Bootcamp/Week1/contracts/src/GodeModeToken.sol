@@ -6,12 +6,12 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 /**
- * @title Gode Mode Token
+ * @title God Mode Token
  * @author Skyge
  * @notice A special address is able to transfer tokens between addresses at will.
  * @dev This contract is an ERC20 token with a special address that can transfer tokens between addresses at will.
  */
-contract GodeModeToken is Ownable2Step, ERC20 {
+contract GodModeToken is Ownable2Step, ERC20 {
     // Special address that can transfer tokens between addresses at will
     address public god;
 
@@ -21,7 +21,7 @@ contract GodeModeToken is Ownable2Step, ERC20 {
     /*//////////////////////////////////////////////////////////////
                            Constructor
     //////////////////////////////////////////////////////////////*/
-    constructor() ERC20("Gode Mode Token", "GMT") Ownable(msg.sender) {}
+    constructor() ERC20("God Mode Token", "GMT") Ownable(msg.sender) {}
 
     /*//////////////////////////////////////////////////////////////
                            God functions
