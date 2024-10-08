@@ -1,0 +1,8 @@
+EnumerableNFTTest:testMint() (gas: 623632)
+NFTTrioTest:testClaimRewards() (gas: 289272)
+NFTTrioTest:testMintWithDiscount() (gas: 146748)
+NFTTrioTest:testNormalMint() (gas: 118302)
+NFTTrioTest:testStakeNFT() (gas: 227186)
+NFTTrioTest:testWithdrawFunds() (gas: 125581)
+NFTTrioTest:testWithdrawNFT() (gas: 271635)
+PrimeNFTTest:testMint() (gas: 621375)
