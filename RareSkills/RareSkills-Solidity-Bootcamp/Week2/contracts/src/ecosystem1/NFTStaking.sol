@@ -84,7 +84,7 @@ contract NFTStaking {
      * @dev Unstake NFTs from this contract.
      * @param tokenId The NFT token id.
      */
-    function withNFT(uint256 tokenId) external {
+    function withdrawNFT(uint256 tokenId) external {
         NFTInfo memory nftInfo = tokenIdToNFTInfo[tokenId];
         if (msg.sender != nftInfo.owner) {
             revert NotOwnerOfNFT();

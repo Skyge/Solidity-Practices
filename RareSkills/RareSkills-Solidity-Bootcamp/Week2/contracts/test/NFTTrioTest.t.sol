@@ -108,7 +108,7 @@ contract NFTTrioTest is Test {
         (address tokenIdOwner,) = nftStaking.tokenIdToNFTInfo(lastTokenId);
 
         vm.startPrank(tokenIdOwner);
-        nftStaking.withNFT(lastTokenId);
+        nftStaking.withdrawNFT(lastTokenId);
         vm.stopPrank();
 
         assert(nftStaking.getStakedTokenIds(tokenIdOwner).length == 0);
