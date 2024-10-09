@@ -29,6 +29,7 @@ contract MyNFT is Ownable2Step, ERC721Royalty {
     uint256 public currentTokenId;
     BitMaps.BitMap private hasClaimed;
 
+    event WithdrawFunds(address indexed to, uint256 indexed amount);
     event Mint(address indexed account, uint256 indexed tokenId);
     event MintWithDiscount(address indexed account, uint256 indexed tokenId);
 
@@ -37,7 +38,7 @@ contract MyNFT is Ownable2Step, ERC721Royalty {
     error InsufficientPayment();
     error InvalidProof();
     error HasClaimedByDiscount();
-    error WithdrawFailed();
+    error WithdrawFundsFailed();
 
     /*//////////////////////////////////////////////////////////////
                            Constructor
@@ -62,10 +63,13 @@ contract MyNFT is Ownable2Step, ERC721Royalty {
      * @param to The address to receive the funds.
      */
     function withdrawFunds(address to) external onlyOwner {
-        (bool succeed,) = to.call{value: address(this).balance}("");
+        uint256 totalFunds = address(this).balance;
+        (bool succeed,) = to.call{value: totalFunds}("");
         if (!succeed) {
-            revert WithdrawFailed();
+            revert WithdrawFundsFailed();
         }
+
+        emit WithdrawFunds(to, totalFunds);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -85,18 +89,15 @@ contract MyNFT is Ownable2Step, ERC721Royalty {
             revert InsufficientPayment();
         }
 
+        // Accumulate the token ID
+        currentTokenId++;
+
         // Mint the NFT
         _safeMint(to, currentTokenId);
         emit Mint(msg.sender, currentTokenId);
-
-        // Set royalty info for the NFT
-        (address royaltyReceiver,) = royaltyInfo(currentTokenId, PRICE);
-        _setTokenRoyalty(currentTokenId, royaltyReceiver, ROYALTY_FEE);
-
-        // Accumulate the token ID
-        currentTokenId++;
     }
 
+    // TODO: Add a new parameter: index, so that the user can mint multiple NFTs at once.
     /**
      * @notice Special users mint new NFT with a discount when does not reach mint limit.
      * @dev Mint the NFT to the specified address with a discount.
@@ -120,19 +121,15 @@ contract MyNFT is Ownable2Step, ERC721Royalty {
             revert InsufficientPayment();
         }
 
-        // Mint the NFT
-        _safeMint(to, currentTokenId);
-        emit MintWithDiscount(msg.sender, currentTokenId);
-
         // Mark the user has claimed the discount
         hasClaimed.setTo(uint256(uint160(msg.sender)), true);
 
-        // Set royalty info for the NFT
-        (address royaltyReceiver,) = royaltyInfo(currentTokenId, DISCOUNT_PRICE);
-        _setTokenRoyalty(currentTokenId, royaltyReceiver, ROYALTY_FEE);
-
         // Accumulate the token ID
         currentTokenId++;
+
+        // Mint the NFT
+        _safeMint(to, currentTokenId);
+        emit MintWithDiscount(msg.sender, currentTokenId);
     }
 
     /*//////////////////////////////////////////////////////////////

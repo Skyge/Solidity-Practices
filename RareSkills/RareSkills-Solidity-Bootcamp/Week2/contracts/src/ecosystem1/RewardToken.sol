@@ -10,7 +10,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
  * @dev This contract is used to create a reward token. The token can only be minted by the miner.
  */
 contract RewardToken is AccessControl, ERC20 {
-    bytes32 public constant MINER_ROLE = keccak256("MINER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     /*//////////////////////////////////////////////////////////////
                            Constructor
@@ -28,7 +28,7 @@ contract RewardToken is AccessControl, ERC20 {
      * @param to The address to receive the minted token
      * @param amount The amount of token to mint
      */
-    function mint(address to, uint256 amount) external onlyRole(MINER_ROLE) {
+    function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
 }

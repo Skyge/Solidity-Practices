@@ -1,6 +1,7 @@
 - **Besides the examples listed in the code and the reading, what might the wrapped NFT pattern be used for?**
+  - Cross-chain Compatibility
   - Wrapped NFTs can facilitate fractional ownership of high-value NFTs
-  - Wrapping NFTs into ERC-20 can allow for easier listing and trading of NFT collections
+  - *Wrapping NFTs into ERC-20 can allow for easier listing and trading of NFT collections*
 
 
 ## References

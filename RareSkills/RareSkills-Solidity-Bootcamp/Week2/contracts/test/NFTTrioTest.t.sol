@@ -31,7 +31,7 @@ contract NFTTrioTest is Test {
         uint256 beforeTokenId = nft.currentTokenId();
         vm.prank(alice);
         nft.safeMint{value: 0.1 ether}(alice);
-        assert(nft.ownerOf(beforeTokenId) == alice);
+        assert(nft.ownerOf(beforeTokenId + 1) == alice);
         assert(nft.currentTokenId() == beforeTokenId + 1);
         assert(nft.balanceOf(alice) == 1);
         assert(address(nft).balance == 0.1 ether);
@@ -55,7 +55,7 @@ contract NFTTrioTest is Test {
 
         // Has claimed with discount
         assert(nft.hasClaimedDiscount(discountAccount1));
-        assert(nft.ownerOf(beforeTokenId) == discountAccount1);
+        assert(nft.ownerOf(beforeTokenId + 1) == discountAccount1);
         assert(nft.currentTokenId() == beforeTokenId + 1);
         assert(nft.balanceOf(discountAccount1) == 1);
         assert(address(nft).balance == 0.08 ether);
@@ -76,9 +76,9 @@ contract NFTTrioTest is Test {
                            NFTStaking Tests
     //////////////////////////////////////////////////////////////*/
     function testStakeNFT() public {
-        uint256 tokenId = nft.currentTokenId();
         vm.startPrank(alice);
         nft.safeMint{value: 0.1 ether}(alice);
+        uint256 tokenId = nft.currentTokenId();
         // Transfer NFT to NFTStaking to stake
         nft.safeTransferFrom(alice, address(nftStaking), tokenId);
         vm.stopPrank();
@@ -90,13 +90,13 @@ contract NFTTrioTest is Test {
 
     function testClaimRewards() public {
         testStakeNFT();
-        uint256 lastTokenId = nft.currentTokenId() - 1;
-        (address tokenIdOwner, uint256 lastClaimedTime) = nftStaking.tokenIdToNFTInfo(lastTokenId);
+        uint256 tokenId = nft.currentTokenId();
+        (address tokenIdOwner, uint256 lastClaimedTime) = nftStaking.tokenIdToNFTInfo(tokenId);
         // Wait for 1 day
         vm.warp(lastClaimedTime + 1 days);
         // Claim rewards
         vm.startPrank(tokenIdOwner);
-        nftStaking.claim(lastTokenId);
+        nftStaking.claim(tokenId);
         vm.stopPrank();
         // Can withdraw 10 ERC20 tokens every 24 hours.
         assert(rewardToken.balanceOf(tokenIdOwner) == 10e18);
@@ -104,14 +104,14 @@ contract NFTTrioTest is Test {
 
     function testWithdrawNFT() external {
         testClaimRewards();
-        uint256 lastTokenId = nft.currentTokenId() - 1;
-        (address tokenIdOwner,) = nftStaking.tokenIdToNFTInfo(lastTokenId);
+        uint256 tokenId = nft.currentTokenId();
+        (address tokenIdOwner,) = nftStaking.tokenIdToNFTInfo(tokenId);
 
         vm.startPrank(tokenIdOwner);
-        nftStaking.withdrawNFT(lastTokenId);
+        nftStaking.withdrawNFT(tokenId);
         vm.stopPrank();
 
         assert(nftStaking.getStakedTokenIds(tokenIdOwner).length == 0);
-        assert(nft.ownerOf(lastTokenId) == tokenIdOwner);
+        assert(nft.ownerOf(tokenId) == tokenIdOwner);
     }
 }

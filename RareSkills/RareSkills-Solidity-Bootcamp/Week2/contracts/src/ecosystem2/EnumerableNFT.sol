@@ -20,7 +20,7 @@ contract EnumerableNFT is ERC721Enumerable {
                            Constructor
     //////////////////////////////////////////////////////////////*/
     constructor() ERC721("EnumerableNFT", "ENFT") {
-        currentTokenId = 1;
+        currentTokenId = 0;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -31,8 +31,7 @@ contract EnumerableNFT is ERC721Enumerable {
             revert MintLimitReached();
         }
 
-        _safeMint(to, currentTokenId);
-
         currentTokenId++;
+        _safeMint(to, currentTokenId);
     }
 }

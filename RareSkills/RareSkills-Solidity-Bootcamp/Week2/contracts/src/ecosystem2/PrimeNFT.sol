@@ -20,7 +20,7 @@ contract PrimeNFT is ERC721Enumerable {
                            Constructor
     //////////////////////////////////////////////////////////////*/
     constructor() ERC721("EnumerableNFT", "ENFT") {
-        currentTokenId = 1;
+        currentTokenId = 0;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -31,9 +31,8 @@ contract PrimeNFT is ERC721Enumerable {
      * @param to The account to receive the NFT token
      */
     function safeMint(address to) external {
-        _safeMint(to, currentTokenId);
-
         currentTokenId++;
+        _safeMint(to, currentTokenId);
     }
 
     /*//////////////////////////////////////////////////////////////

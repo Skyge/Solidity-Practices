@@ -20,7 +20,7 @@ contract DeployNFTTrio is Script {
         // Deploy NFT staking
         NFTStaking nftStaking = new NFTStaking(address(nft), address(rewardToken));
         // Set NFT staking as the minter of reward token
-        rewardToken.grantRole(rewardToken.MINER_ROLE(), address(nftStaking));
+        rewardToken.grantRole(rewardToken.MINTER_ROLE(), address(nftStaking));
         vm.stopBroadcast();
 
         return (rewardToken, nft, nftStaking, helperConfig);
