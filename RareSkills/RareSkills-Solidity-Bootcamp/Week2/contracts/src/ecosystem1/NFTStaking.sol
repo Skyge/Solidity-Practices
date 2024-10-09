@@ -36,6 +36,7 @@ contract NFTStaking {
     error FailedToAddTokenIdToAccount();
     error FailedToRemoveTokenIdFromAccount();
     error NotOwnerOfNFT();
+    error CallerIsNotTheNFT();
 
     /*//////////////////////////////////////////////////////////////
                            Constructor
@@ -66,6 +67,10 @@ contract NFTStaking {
         external
         returns (bytes4)
     {
+        // `msg.sender` should be the NFT contract address.
+        if (msg.sender != nft) {
+            revert CallerIsNotTheNFT();
+        }
         // Record the NFT infos.
         NFTInfo memory nftInfo = NFTInfo({owner: from, lastClaimedTime: block.timestamp});
         tokenIdToNFTInfo[tokenId] = nftInfo;
