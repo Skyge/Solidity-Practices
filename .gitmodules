@@ -10,3 +10,12 @@
 [submodule "RareSkills/RareSkills-Solidity-Bootcamp/Week2/contracts/lib/openzeppelin-contracts"]
 	path = RareSkills/RareSkills-Solidity-Bootcamp/Week2/contracts/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "RareSkills/RareSkills-Solidity-Bootcamp/Week3-6/contracts/lib/forge-std"]
+	path = RareSkills/RareSkills-Solidity-Bootcamp/Week3-6/contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "RareSkills/RareSkills-Solidity-Bootcamp/Week3-6/contracts/lib/solady"]
+	path = RareSkills/RareSkills-Solidity-Bootcamp/Week3-6/contracts/lib/solady
+	url = https://github.com/vectorized/solady
+[submodule "RareSkills/RareSkills-Solidity-Bootcamp/Week3-6/contracts/lib/openzeppelin-contracts"]
+	path = RareSkills/RareSkills-Solidity-Bootcamp/Week3-6/contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
