@@ -51,6 +51,33 @@ contract UntrustedEscrowTest is Test {
         assert(!claimed);
     }
 
+    // Revert when depositing if the seller is the zero address
+    function testDepositRevertIfSellerIsZeroAddress() external {
+        vm.startPrank(msg.sender);
+        token1.forceApprove(address(untrustedEscrow), type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(UntrustedEscrow.SellerIsZeroAddress.selector));
+        untrustedEscrow.deposit(address(0), address(token1), 100e18);
+        vm.stopPrank();
+    }
+
+    // Revert when depositing if the token is the zero address
+    function testDepositRevertIfTokenIsZeroAddress() external {
+        vm.startPrank(msg.sender);
+        token1.forceApprove(address(untrustedEscrow), type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(UntrustedEscrow.TokenIsZeroAddress.selector));
+        untrustedEscrow.deposit(alice, address(0), 100e18);
+        vm.stopPrank();
+    }
+
+    // Revert when depositing if the amount is zero
+    function testDepositRevertIfAmountIsZero() external {
+        vm.startPrank(msg.sender);
+        token1.forceApprove(address(untrustedEscrow), type(uint256).max);
+        vm.expectRevert(abi.encodeWithSelector(UntrustedEscrow.AmountIsZero.selector));
+        untrustedEscrow.deposit(alice, address(token1), 0);
+        vm.stopPrank();
+    }
+
     function testWithdraw() external {
         vm.startPrank(msg.sender);
         token1.forceApprove(address(untrustedEscrow), type(uint256).max);
@@ -59,8 +86,7 @@ contract UntrustedEscrowTest is Test {
         untrustedEscrow.deposit(alice, address(token1), depositAmount);
         vm.stopPrank();
 
-        (, address seller,,, uint256 releaseTime, bool claimed) =
-            untrustedEscrow.escrows(beforeEscrowCounts);
+        (, address seller,,, uint256 releaseTime, bool claimed) = untrustedEscrow.escrows(beforeEscrowCounts);
 
         // Increase the time to the release time
         vm.warp(releaseTime);
@@ -71,5 +97,67 @@ contract UntrustedEscrowTest is Test {
 
         (,,,,, claimed) = untrustedEscrow.escrows(beforeEscrowCounts);
         assert(claimed);
+    }
+
+    // Revert when withdrawing if the escrow does not be allowed to withdraw
+    function testWithdrawRevertIfNotAllowed() external {
+        uint256 beforeEscrowCounts = untrustedEscrow.escrowCounts();
+        vm.startPrank(msg.sender);
+        token1.forceApprove(address(untrustedEscrow), type(uint256).max);
+        untrustedEscrow.deposit(alice, address(token1), 100e18);
+        vm.stopPrank();
+
+        (,,,, uint256 releaseTime,) = untrustedEscrow.escrows(beforeEscrowCounts);
+        // Increase the time, but does reach the release time
+        vm.warp(releaseTime - 1);
+        console2.log("current time", block.timestamp, "release time", releaseTime);
+        // Withdraw the token from the untrusted escrow
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(UntrustedEscrow.WithdrawalNotAllowedYet.selector));
+        untrustedEscrow.withdraw(beforeEscrowCounts);
+        vm.stopPrank();
+    }
+
+    // Revert when withdrawing if the call is unauthorized withdrawal
+    function testWithdrawRevertIfUnauthorizedWithdrawal() external {
+        uint256 beforeEscrowCounts = untrustedEscrow.escrowCounts();
+        vm.startPrank(msg.sender);
+        token1.forceApprove(address(untrustedEscrow), type(uint256).max);
+        untrustedEscrow.deposit(alice, address(token1), 100e18);
+        vm.stopPrank();
+
+        (, address seller,,, uint256 releaseTime,) = untrustedEscrow.escrows(beforeEscrowCounts);
+        // Increase the time to the release time
+        vm.warp(releaseTime);
+        // Bob is not the seller
+        assertTrue(bob != seller);
+        // Withdraw the token from the untrusted escrow
+        vm.startPrank(bob);
+        vm.expectRevert(abi.encodeWithSelector(UntrustedEscrow.UnauthorizedWithdrawal.selector));
+        untrustedEscrow.withdraw(beforeEscrowCounts);
+        vm.stopPrank();
+    }
+
+    // Revert when withdrawing if the escrow has been claimed
+    function testWithdrawRevertIfEscrowClaimed() external {
+        uint256 beforeEscrowCounts = untrustedEscrow.escrowCounts();
+        vm.startPrank(msg.sender);
+        token1.forceApprove(address(untrustedEscrow), type(uint256).max);
+        untrustedEscrow.deposit(alice, address(token1), 100e18);
+        vm.stopPrank();
+
+        (,,,, uint256 releaseTime,) = untrustedEscrow.escrows(beforeEscrowCounts);
+        // Increase the time to the release time
+        vm.warp(releaseTime);
+        // Withdraw the token from the untrusted escrow
+        vm.startPrank(alice);
+        untrustedEscrow.withdraw(beforeEscrowCounts);
+        vm.stopPrank();
+
+        // Withdraw the token from the untrusted escrow again
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(UntrustedEscrow.HasClaimed.selector));
+        untrustedEscrow.withdraw(beforeEscrowCounts);
+        vm.stopPrank();
     }
 }

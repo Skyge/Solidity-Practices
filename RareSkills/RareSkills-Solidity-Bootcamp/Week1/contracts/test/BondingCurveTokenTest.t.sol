@@ -18,6 +18,11 @@ contract BondingCurveTokenTest is Test {
         reserveToken = IERC20(helperConfig.getConfig().reserveToken);
     }
 
+    function testDeployFailed() external {
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.ReverseTokenIsZeroAddress.selector));
+        new BondingCurveToken("BondingCurveToken", "BCT", address(0));
+    }
+
     function testBuyingToken() public {
         // Buy 100 tokens
         uint256 amount = 100;
@@ -43,6 +48,53 @@ contract BondingCurveTokenTest is Test {
         assertEq(afterReserveContractReserveTokenBalance - beforeReserveContractReserveTokenBalance, actualCost);
     }
 
+    // Revert when buying if the amount is zero
+    function testBuyingTokenWillFailIfBuyingAmountIsZero() public {
+        vm.startPrank(msg.sender);
+        // Approve the reserve token to the bonding curve token
+        reserveToken.approve(address(bondingCurveToken), type(uint256).max);
+        // Buy tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.BuyingAmountIsZero.selector));
+        bondingCurveToken.buy(msg.sender, 0, 0);
+        vm.stopPrank();
+    }
+
+    // Revert when buying if the total cost is greater than the max cost amount
+    function testBuyingTokenWillFailIfSlippageExceeded() public {
+        // Buy 100 tokens
+        uint256 amount = 100;
+        (uint256 calculatedTotalCost,) = bondingCurveToken.calculateBuyCost(amount);
+        // Decrease the max cost amount to make the slippage exceeded
+        uint256 maxCostAmount = calculatedTotalCost - 1;
+
+        vm.startPrank(msg.sender);
+        // Approve the reserve token to the bonding curve token
+        reserveToken.approve(address(bondingCurveToken), type(uint256).max);
+        // Buy tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.BuyingSlippageExceeded.selector));
+        bondingCurveToken.buy(msg.sender, amount, maxCostAmount);
+        vm.stopPrank();
+    }
+
+    // Revert when buying if the buyer has insufficient reserve token
+    function testBuyingTokenWillFailIfInsufficientReserveAmount() public {
+        // Buy 100 tokens
+        uint256 amount = 100;
+        (uint256 calculatedTotalCost,) = bondingCurveToken.calculateBuyCost(amount);
+        uint256 currentReserveTokenBalance = reserveToken.balanceOf(msg.sender);
+
+        vm.startPrank(msg.sender);
+        // Decrease the reserve token balance of the buyer to make it insufficient
+        reserveToken.transfer(makeAddr("anotherAccount"), currentReserveTokenBalance - calculatedTotalCost + 1);
+
+        // Approve the reserve token to the bonding curve token
+        reserveToken.approve(address(bondingCurveToken), type(uint256).max);
+        // Buy tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.InsufficientReserveAmount.selector));
+        bondingCurveToken.buy(msg.sender, amount, type(uint256).max);
+        vm.stopPrank();
+    }
+
     function testSellingToken() public {
         // Sell 100 tokens
         uint256 amount = 100;
@@ -59,22 +111,87 @@ contract BondingCurveTokenTest is Test {
         uint256 beforeBuyerReserveTokenBalance = reserveToken.balanceOf(msg.sender);
         uint256 beforeReserveContractReserveTokenBalance = reserveToken.balanceOf(address(bondingCurveToken));
 
-        // Approve the bonding curve token to the reserve token
-        bondingCurveToken.approve(address(reserveToken), type(uint256).max);
         // Sell tokens
-        uint256 actualReceivedAmonut = bondingCurveToken.sell(msg.sender, amount, minReceived);
+        uint256 actualReceivedAmount = bondingCurveToken.sell(msg.sender, amount, minReceived);
         vm.stopPrank();
 
         uint256 afterBuyerTokenBalance = bondingCurveToken.balanceOf(msg.sender);
         uint256 afterBuyerReserveTokenBalance = reserveToken.balanceOf(msg.sender);
         uint256 afterReserveContractReserveTokenBalance = reserveToken.balanceOf(address(bondingCurveToken));
         assertEq(beforeBuyerTokenBalance - afterBuyerTokenBalance, amount);
-        assertEq(afterBuyerReserveTokenBalance - beforeBuyerReserveTokenBalance, actualReceivedAmonut);
+        assertEq(afterBuyerReserveTokenBalance - beforeBuyerReserveTokenBalance, actualReceivedAmount);
         assertEq(
-            beforeReserveContractReserveTokenBalance - afterReserveContractReserveTokenBalance, actualReceivedAmonut
+            beforeReserveContractReserveTokenBalance - afterReserveContractReserveTokenBalance, actualReceivedAmount
         );
         // Cause of selling fee, the actual received amount is less than the calculated received amount
-        assertLt(actualReceivedAmonut, calculatedReceived);
+        assertLt(actualReceivedAmount, calculatedReceived);
+    }
+
+    // Revert when selling if the recipient is zero address
+    function testSellingTokenWillFailIfRecipientIsZeroAddress() external {
+        // Sell 100 tokens
+        uint256 amount = 100;
+        // Buy token at first
+        vm.startPrank(msg.sender);
+        reserveToken.approve(address(bondingCurveToken), type(uint256).max);
+        // Ignore slippage at here
+        bondingCurveToken.buy(msg.sender, amount, type(uint256).max);
+
+        vm.startPrank(msg.sender);
+        // Sell tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.RecipientIsZeroAddress.selector));
+        bondingCurveToken.sell(address(0), amount, 0);
+        vm.stopPrank();
+    }
+
+    // Revert when selling if the amount is zero
+    function testSellingTokenWillFailIfSellingAmountIsZero() external {
+        // Sell 0 tokens
+        uint256 amount = 0;
+        vm.startPrank(msg.sender);
+        // Sell tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.SellingAmountIsZero.selector));
+        bondingCurveToken.sell(msg.sender, amount, 0);
+        vm.stopPrank();
+    }
+
+    // Revert when selling if the seller has insufficient token amount
+    function testSellingTokenWillFailIfInsufficientTokenAmount() external {
+        // Sell 100 tokens
+        uint256 amount = 100;
+        // Buy token at first
+        vm.startPrank(msg.sender);
+        reserveToken.approve(address(bondingCurveToken), type(uint256).max);
+        // Ignore slippage at here
+        bondingCurveToken.buy(msg.sender, amount, type(uint256).max);
+
+        vm.startPrank(msg.sender);
+        // Decrease the token balance of the seller to make it insufficient
+        bondingCurveToken.transfer(makeAddr("anotherAccount"), amount - 1);
+        // Sell tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.InsufficientTokenAmount.selector));
+        bondingCurveToken.sell(msg.sender, amount, 0);
+        vm.stopPrank();
+    }
+
+    // Revert when selling if the actual received amount is less than the min received amount
+    function testSellingTokenWillFailIfSellingSlippageExceeded() external {
+        // Sell 100 tokens
+        uint256 amount = 100;
+        // Buy token at first
+        vm.startPrank(msg.sender);
+        reserveToken.approve(address(bondingCurveToken), type(uint256).max);
+        // Ignore slippage at here
+        bondingCurveToken.buy(msg.sender, amount, type(uint256).max);
+
+        (uint256 calculatedReceived,) = bondingCurveToken.calculateSellReceived(amount);
+        // Increase the min received amount to make the slippage exceeded
+        uint256 minReceived = calculatedReceived + 1;
+        vm.startPrank(msg.sender);
+        // Sell tokens
+        vm.expectRevert(abi.encodeWithSelector(BondingCurveToken.SellingSlippageExceeded.selector));
+        bondingCurveToken.sell(msg.sender, amount, minReceived);
+        vm.stopPrank();
     }
 
     function testWithdrawReserves() public {
@@ -99,5 +216,9 @@ contract BondingCurveTokenTest is Test {
         uint256 afterRecipientReserveTokenBalance = reserveToken.balanceOf(recipient);
         assertEq(afterRecipientReserveTokenBalance - beforeRecipientReserveTokenBalance, reservesAmount);
         vm.stopPrank();
+    }
+
+    function testGetTokenDecimals() external view {
+        assertGt(bondingCurveToken.decimals(), 0);
     }
 }

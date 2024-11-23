@@ -118,7 +118,6 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
         if (amount == 0) revert SellingAmountIsZero();
 
         (uint256 totalReceived, uint256 nextPrice) = _calculateSellReceived(amount);
-        
 
         if (amount > balanceOf(msg.sender)) {
             revert InsufficientTokenAmount();

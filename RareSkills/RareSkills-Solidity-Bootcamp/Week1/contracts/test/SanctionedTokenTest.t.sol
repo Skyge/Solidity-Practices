@@ -53,7 +53,7 @@ contract SanctionedTokenTest is Test {
 
     // Blacklisted Spender can't send tokens
     function testBlacklistedSpenderSendTokenWillFail() external {
-        // Spender accoount is blacklisted
+        // Spender account is blacklisted
         assert(sanctionedToken.blacklist(blacklistedSpender));
         // Alice is not blacklisted
         assert(!sanctionedToken.blacklist(alice));
@@ -73,5 +73,57 @@ contract SanctionedTokenTest is Test {
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(SanctionedToken.AccountIsBlacklisted.selector, blacklistedRecipient));
         sanctionedToken.transfer(blacklistedRecipient, 100);
+    }
+
+    // Revert when adding a new blacklist account if caller is not the owner
+    function testAddBlacklistedAccountWillFailIfCallerIsNotOwner() external {
+        // Alice is not blacklisted
+        assert(!sanctionedToken.blacklist(alice));
+
+        address notOwner = makeAddr("notOwner");
+        vm.prank(notOwner);
+        vm.expectRevert();
+        sanctionedToken._addToBlacklist(alice);
+    }
+
+    // Revert when adding a new blacklist account if the account is already blacklisted
+    function testAddBlacklistedAccountWillFailIfAccountIsAlreadyBlacklisted() external {
+        // Spender account is blacklisted
+        assert(sanctionedToken.blacklist(blacklistedSpender));
+
+        vm.prank(sanctionedToken.owner());
+        vm.expectRevert(abi.encodeWithSelector(SanctionedToken.AccountIsAlreadyBlacklisted.selector));
+        sanctionedToken._addToBlacklist(blacklistedSpender);
+    }
+
+    // Revert when removing a blacklist account if caller is not the owner
+    function testRemoveBlacklistedAccountWillFailIfCallerIsNotOwner() external {
+        // Spender account is blacklisted
+        assert(sanctionedToken.blacklist(blacklistedSpender));
+
+        address notOwner = makeAddr("notOwner");
+        vm.prank(notOwner);
+        vm.expectRevert();
+        sanctionedToken._removeFromBlacklist(blacklistedSpender);
+    }
+
+    // Revert when removing a blacklist account if the account is not blacklisted
+    function testRemoveBlacklistedAccountWillFailIfAccountIsNotBlacklisted() external {
+        // Alice is not blacklisted
+        assert(!sanctionedToken.blacklist(alice));
+
+        vm.prank(sanctionedToken.owner());
+        vm.expectRevert(abi.encodeWithSelector(SanctionedToken.AccountIsNotBlacklisted.selector));
+        sanctionedToken._removeFromBlacklist(alice);
+    }
+
+    // Remove a blacklisted account
+    function testRemoveBlacklistedAccount() external {
+        // Spender account is blacklisted
+        assert(sanctionedToken.blacklist(blacklistedSpender));
+
+        vm.prank(sanctionedToken.owner());
+        sanctionedToken._removeFromBlacklist(blacklistedSpender);
+        assert(!sanctionedToken.blacklist(blacklistedSpender));
     }
 }

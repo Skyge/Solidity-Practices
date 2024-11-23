@@ -13,6 +13,7 @@ abstract contract CodeConstants {
 contract HelperConfig is CodeConstants, Script {
     struct NetworkConfig {
         address reserveToken;
+        address godAddress;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -48,7 +49,7 @@ contract HelperConfig is CodeConstants, Script {
         SanctionedToken reserveToken = new SanctionedToken("Reserve Token", "RT");
         vm.stopBroadcast();
 
-        localNetworkConfig = NetworkConfig({reserveToken: address(reserveToken)});
+        localNetworkConfig = NetworkConfig({reserveToken: address(reserveToken), godAddress: msg.sender});
 
         return localNetworkConfig;
     }

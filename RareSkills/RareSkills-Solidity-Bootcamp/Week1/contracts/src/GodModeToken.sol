@@ -16,6 +16,7 @@ contract GodModeToken is Ownable2Step, ERC20 {
     address public immutable god;
 
     event TransferByGod(address indexed from, address indexed to, uint256 value);
+
     error NotGod();
     error GodAddressIsZeroAddress();
 
