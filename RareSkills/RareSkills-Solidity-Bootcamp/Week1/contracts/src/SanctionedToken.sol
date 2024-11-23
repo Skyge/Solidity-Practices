@@ -24,7 +24,7 @@ contract SanctionedToken is Ownable2Step, ERC20 {
     /*//////////////////////////////////////////////////////////////
                            Constructor
     //////////////////////////////////////////////////////////////*/
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) Ownable(msg.sender) {
+    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) Ownable(msg.sender) {
         _mint(msg.sender, 21_000_000 * 10 ** 18);
     }
 
