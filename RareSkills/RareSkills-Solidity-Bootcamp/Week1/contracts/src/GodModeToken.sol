@@ -13,15 +13,19 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
  */
 contract GodModeToken is Ownable2Step, ERC20 {
     // Special address that can transfer tokens between addresses at will
-    address public god;
+    address public immutable god;
 
     event TransferByGod(address indexed from, address indexed to, uint256 value);
     error NotGod();
+    error GodAddressIsZeroAddress();
 
     /*//////////////////////////////////////////////////////////////
                            Constructor
     //////////////////////////////////////////////////////////////*/
-    constructor() ERC20("God Mode Token", "GMT") Ownable(msg.sender) {}
+    constructor(address godAddress) ERC20("God Mode Token", "GMT") Ownable(msg.sender) {
+        if (godAddress == address(0)) revert GodAddressIsZeroAddress();
+        god = godAddress;
+    }
 
     /*//////////////////////////////////////////////////////////////
                            God functions

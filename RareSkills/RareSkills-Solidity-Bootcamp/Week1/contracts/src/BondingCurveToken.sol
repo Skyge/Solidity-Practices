@@ -26,11 +26,11 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
     uint256 public constant FEE_PRECISION = 10000;
 
     // Reserve token address
-    address public reserveToken;
+    address public immutable reserveToken;
     // Total reserves
     uint256 public reserves;
     // Reserve token decimals
-    uint256 public reserveDecimals;
+    uint256 public immutable reserveDecimals;
     // Current token price
     uint256 public tokenPrice;
 
@@ -50,10 +50,11 @@ contract BondingCurveToken is Ownable2Step, ERC20 {
     /*//////////////////////////////////////////////////////////////
                            Constructor
     //////////////////////////////////////////////////////////////*/
-    constructor(string memory name, string memory symbol, address _reverseToken)
-        ERC20(name, symbol)
+    constructor(string memory name_, string memory symbol_, address _reverseToken)
+        ERC20(name_, symbol_)
         Ownable(msg.sender)
     {
+        if (_reverseToken == address(0)) revert ReverseTokenIsZeroAddress();
         reserveDecimals = uint256(IERC20Metadata(_reverseToken).decimals());
         reserveToken = _reverseToken;
     }
